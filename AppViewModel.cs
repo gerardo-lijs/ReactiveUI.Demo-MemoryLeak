@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Threading;
@@ -36,8 +37,8 @@ namespace ReactiveDemo
         // class subscribes to an Observable and stores a copy of the latest value.
         // It also runs an action whenever the property changes, usually calling
         // ReactiveObject's RaisePropertyChanged.
-        private readonly ObservableAsPropertyHelper<IEnumerable<NugetDetailsViewModel>> _searchResults;
-        public IEnumerable<NugetDetailsViewModel> SearchResults => _searchResults.Value;
+        private readonly ObservableAsPropertyHelper<ObservableCollection<NugetDetailsViewModel>> _searchResults;
+        public ObservableCollection<NugetDetailsViewModel> SearchResults => _searchResults.Value;
 
         // Here, we want to create a property to represent when the application 
         // is performing a search (i.e. when to show the "spinner" control that 
@@ -103,7 +104,7 @@ namespace ReactiveDemo
         // Here we search NuGet packages using the NuGet.Client library. Ideally, we should
         // extract such code into a separate service, say, INuGetSearchService, but let's 
         // try to avoid overcomplicating things at this time.
-        private async Task<IEnumerable<NugetDetailsViewModel>> SearchNuGetPackages(
+        private async Task<ObservableCollection<NugetDetailsViewModel>> SearchNuGetPackages(
             string term, CancellationToken token)
         {
             var providers = new List<Lazy<INuGetResourceProvider>>();
@@ -114,7 +115,7 @@ namespace ReactiveDemo
             var filter = new SearchFilter(false);
             var resource = await source.GetResourceAsync<PackageSearchResource>().ConfigureAwait(false);
             var metadata = await resource.SearchAsync(term, filter, 0, 10, null, token).ConfigureAwait(false);
-            return metadata.Select(x => new NugetDetailsViewModel(x));
+            return new ObservableCollection<NugetDetailsViewModel>(metadata.Select(x => new NugetDetailsViewModel(x)));
         }
     }
 }
